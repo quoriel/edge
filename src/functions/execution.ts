@@ -1,8 +1,14 @@
-const { Logger, NativeFunction, ArgType, Compiler, Interpreter } = require("@tryforge/forgescript");
-const { resolve } = require("path");
-const { existsSync } = require("fs");
+import {
+    Compiler,
+    Interpreter,
+    ArgType,
+    NativeFunction,
+    Logger
+} from '@tryforge/forgescript'
+import { resolve } from 'path'
+import { existsSync } from 'fs';
 
-exports.default = new NativeFunction({
+export default new NativeFunction({
     name: "$execution",
     description: "Executes code exported as a string from the specified file",
     version: "1.0.0",
@@ -31,9 +37,9 @@ exports.default = new NativeFunction({
                 data: Compiler.compile(code)
             });
             return result === null ? this.stop() : this.success(result);
-        } catch (error) {
+        } catch (error:unknown) {
             Logger.error(error);
-            return this.error(error);
+            return this.error(error as Error);
         }
     }
 });
