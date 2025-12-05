@@ -24,7 +24,7 @@ const client = new ForgeClient({
 });
 
 // Loading interactions.
-db.commands.load("interactions");
+edge.commands.load("interactions");
 
 client.login("...");
 ```
