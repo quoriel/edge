@@ -34,7 +34,7 @@ client.login("...");
 module.exports = {
     name: "hello",
     type: "interactionCreate",
-    code: `$sendText[Hello world!]`
+    code: `$sendMessage[$channelID;Hello world!]`
 };
 ```
 
