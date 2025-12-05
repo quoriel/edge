@@ -9,6 +9,6 @@
         "docgen": "node src/docgen.js"
     },
     "dependencies": {
-        "@tryforge/forgescript": "^2.4.1"
+        "@tryforge/forgescript": "^2.5.0"
     }
 }

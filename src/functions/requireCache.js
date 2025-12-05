@@ -1,6 +1,5 @@
 const { NativeFunction, ArgType } = require("@tryforge/forgescript");
 const { resolve } = require("path");
-const { existsSync } = require("fs");
 
 const ActionType = {
     delete: "delete",
@@ -11,7 +10,6 @@ exports.default = new NativeFunction({
     name: "$requireCache",
     description: "Deletes a module from the cache or reloads it (including dependencies)",
     version: "1.0.0",
-    output: ArgType.Boolean,
     brackets: true,
     unwrap: true,
     args: [
@@ -39,30 +37,23 @@ exports.default = new NativeFunction({
     ],
     async execute(ctx, [path, type, recursive]) {
         const full = resolve(process.cwd(), path);
-        if (!existsSync(full)) {
-            return this.success(false);
-        }
         if (recursive) {
-            clearModuleCacheRecursively(full);
+            clear(full);
         } else {
             delete require.cache[full];
         }
         if (type === "update") {
-            try {
-                require(full);
-            } catch (e) {
-                return this.success(false);
-            }
+            require(full);
         }
-        return this.success(true);
+        return this.success();
     }
 });
 
-function clearModuleCacheRecursively(path) {
+function clear(path) {
     const mod = require.cache[path];
     if (!mod) return;
-    mod.children.forEach(child => {
-        clearModuleCacheRecursively(child.id);
-    });
+    for (let i = 0, l = mod.children.length; i < l; i++) {
+        clear(mod.children[i].id);
+    }
     delete require.cache[path];
 }

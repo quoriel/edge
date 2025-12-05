@@ -1,6 +1,5 @@
 const { NativeFunction, ArgType } = require("@tryforge/forgescript");
 const { resolve } = require("path");
-const { existsSync } = require("fs");
 
 exports.default = new NativeFunction({
     name: "$require",
@@ -19,13 +18,6 @@ exports.default = new NativeFunction({
         }
     ],
     async execute(ctx, [path]) {
-        const full = resolve(process.cwd(), path);
-        if (!existsSync(full)) return this.stop();
-        try {
-            const result = require(full);
-            return this.success(typeof result === "object" ? JSON.stringify(result) : result);
-        } catch {
-            return this.success();
-        }
+        return this.successJSON(require(resolve(process.cwd(), path)));
     }
 });
