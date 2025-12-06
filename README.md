@@ -42,7 +42,6 @@ module.exports = {
 - **name** - The interaction identifier (customId prefix before separator)
 - **separator** - Custom separator for splitting customId (default: `-`) (optional)
 - **allowed** - Array of allowed interaction types (optional)
-- **code** - ForgeScript code to execute
 
 ### Supported allowed
 `button`, `selectMenu`, `modal`, `autocomplete`, `contextMenu`, `activityCommand`
