@@ -34,12 +34,12 @@ client.login("...");
 module.exports = {
     name: "hello",
     type: "interactionCreate",
-    code: `$sendMessage[$channelID;Hello world!]`
+    code: `$ephemeral Hello world!`
 };
 ```
 
 ### Structure
-- **name** - The interaction identifier (customId prefix before separator)
+- **name** - The interaction identifier 
 - **separator** - Custom separator for splitting customId (default: `-`) (optional)
 - **allowed** - Array of allowed interaction types (optional)
 
