@@ -2,6 +2,26 @@ const { Interpreter } = require("@tryforge/forgescript");
 const { EventHandler } = require("../managers/eventHandler");
 const { QuorielEdge } = require("../main");
 
+exports.default = new EventHandler({
+    name: "interactionCreate",
+    description: "Handles non-slash command interactions",
+    version: "1.0.0",
+    listener(interaction) {
+        if (interaction.isCommand()) return;
+        const commands = this.getExtension(QuorielEdge, true).commands.get("interactionCreate");
+        for (const command of commands) {
+            const allowed = command.data.allowed;
+            if (!allowed?.length || capricious(interaction, allowed)) {
+                const id = interaction.customId;
+                const index = id.indexOf(command.separator || "-");
+                if ((index !== -1 ? id.substring(0, index) : id) === command.name) {
+                    Interpreter.run({ obj: interaction, client: this, command, data: command.compiled.code, args: [] });
+                }
+            }
+        }
+    }
+});
+
 function capricious(interaction, types) {
     for (let i = 0, l = types.length; i < l; i++) {
         switch (types[i]) {
@@ -27,23 +47,3 @@ function capricious(interaction, types) {
     }
     return false;
 }
-
-exports.default = new EventHandler({
-    name: "interactionCreate",
-    description: "Handles non-slash command interactions",
-    version: "1.0.0",
-    listener(interaction) {
-        if (interaction.isCommand()) return;
-        const commands = this.getExtension(QuorielEdge, true).commands.get("interactionCreate");
-        for (const command of commands) {
-            const allowed = command.data.allowed;
-            if (!allowed?.length || capricious(interaction, allowed)) {
-                const name = command.name;
-                const index = name.indexOf(command.separator || "-");
-                if (interaction.customId?.startsWith(index !== -1 ? name.substring(0, index) : name)) {
-                    Interpreter.run({ obj: interaction, client: this, command, data: command.compiled.code, args: [] });
-                }
-            }
-        }
-    }
-});
