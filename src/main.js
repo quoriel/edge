@@ -21,9 +21,7 @@ class QuorielEdge extends ForgeExtension {
         EventManager.load("QuorielEdgeEvents", __dirname + "/events");
         if (this.options?.events?.includes("interactionCreate")) {
             client.events.load("QuorielEdgeEvents", this.options.events);
-            client.on("interactionCreate", async interaction => {
-                this.emitter.emit("interactionCreate", interaction);
-            });
+            client.on("interactionCreate", async interaction => this.emitter.emit("interactionCreate", interaction));
         }
     }
 }
