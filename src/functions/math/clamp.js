@@ -30,7 +30,7 @@ exports.default = new NativeFunction({
             rest: false
         }
     ],
-    async execute(ctx, [value, min, max]) {
+    execute(ctx, [value, min, max]) {
         return this.success(Math.max(min, Math.min(max, value)));
     }
 });

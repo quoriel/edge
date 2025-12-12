@@ -16,7 +16,7 @@ exports.default = new NativeFunction({
             rest: true
         }
     ],
-    async execute(ctx, [name]) {
+    execute(ctx, [name]) {
         return this.success(process.env[name]);
     }
 });

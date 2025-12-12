@@ -9,6 +9,7 @@
         "docgen": "node src/docgen.js"
     },
     "dependencies": {
+        "@eolthar/events": "^1.0.0",
         "@tryforge/forgescript": "^2.5.0"
     }
 }

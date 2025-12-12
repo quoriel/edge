@@ -30,7 +30,7 @@ exports.default = new NativeFunction({
             rest: false
         }
     ],
-    async execute(ctx, [start, end, amount]) {
+    execute(ctx, [start, end, amount]) {
         return this.success(start + (end - start) * amount);
     }
 });

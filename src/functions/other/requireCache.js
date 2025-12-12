@@ -35,7 +35,7 @@ exports.default = new NativeFunction({
             rest: false
         }
     ],
-    async execute(ctx, [path, type, recursive]) {
+    execute(ctx, [path, type, recursive]) {
         const full = resolve(process.cwd(), path);
         if (recursive) {
             clear(full);

@@ -17,7 +17,7 @@ exports.default = new NativeFunction({
             rest: false
         }
     ],
-    async execute(ctx, [path]) {
+    execute(ctx, [path]) {
         return this.successJSON(require(resolve(process.cwd(), path)));
     }
 });
