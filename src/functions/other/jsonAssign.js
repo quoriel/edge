@@ -16,7 +16,7 @@ exports.default = new NativeFunction({
             rest: true
         }
     ],
-    async execute(ctx, [json]) {
+    execute(ctx, [json]) {
         return this.successJSON(Object.assign(...json));
     }
 });
