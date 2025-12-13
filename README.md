@@ -1,5 +1,5 @@
 # QuorielEdge
-An extended set of functions for ForgeScript, designed to optimize workflows, simplify the execution of various tasks, and support script integration and processing.
+An extended set of functions for **ForgeScript**, designed to optimize workflows, simplify the execution of various tasks, and support script integration and processing.
 
 ## Installation
 ```
@@ -39,7 +39,7 @@ module.exports = {
 ```
 
 ### Structure
-- **name** - The interaction identifier 
+- **name** - The interaction identifier
 - **separator** - Custom separator for splitting customId (default: `-`) (optional)
 - **allowed** - Array of allowed interaction types (optional)
 
