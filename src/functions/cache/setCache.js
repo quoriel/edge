@@ -18,7 +18,7 @@ exports.default = new NativeFunction({
         {
             name: "value",
             description: "New value",
-            type: ArgType.String,
+            type: ArgType.Json,
             required: true,
             rest: false
         }
