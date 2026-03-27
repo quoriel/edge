@@ -1,2 +1,4 @@
 const cache = new Map();
-module.exports = { cache };
+const functions = new Map();
+
+module.exports = { cache, functions };

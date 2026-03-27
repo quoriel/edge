@@ -13,7 +13,7 @@ exports.default = new NativeFunction({
             description: "Environment variable name",
             type: ArgType.String,
             required: true,
-            rest: true
+            rest: false
         }
     ],
     execute(ctx, [name]) {
