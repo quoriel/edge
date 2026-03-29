@@ -2,16 +2,45 @@ const { NativeFunction, ArgType } = require("@tryforge/forgescript");
 const { functions } = require("../../edge");
 const { readFileSync } = require("fs");
 const { dirname } = require("path");
+
 const Module = require("module");
+const acorn = require("acorn");
+
+function structure(pattern) {
+    const names = [];
+    for (const prop of pattern.properties) {
+        if (prop.value.type === "Identifier") {
+            names.push(prop.value.name);
+        } else if (prop.value.type === "ObjectPattern") {
+            names.push(...structure(prop.value));
+        }
+    }
+    return names;
+}
 
 function extract(path) {
     if (functions.has(path)) return functions.get(path);
+    const source = readFileSync(path, "utf8");
+    const ast = acorn.parse(source, { ecmaVersion: 2020, sourceType: "script" });
+    const names = new Set();
+    for (const node of ast.body) {
+        if (node.type === "FunctionDeclaration" && node.id?.name) {
+            names.add(node.id.name);
+        }
+        if (node.type === "VariableDeclaration") {
+            for (const decl of node.declarations) {
+                if (decl.id.type === "Identifier") {
+                    names.add(decl.id.name);
+                } else if (decl.id.type === "ObjectPattern") {
+                    structure(decl.id).forEach(n => names.add(n));
+                }
+            }
+        }
+    }
     const code = `
         const __lcf = {};
-        ${readFileSync(path, "utf8").replace(
-            /^(async\s+)?function\s+(\w+)\s*\(/gm,
-            (_, a, name) => `const ${name} = __lcf["${name}"] = ${a || ""}function ${name}(`
-        )}
+        ${source}
+        ${[...names].map(n => `if (typeof ${n} === "function") __lcf["${n}"] = ${n};`).join("\n")}
         module.exports.__functions = __lcf;
     `;
     const m = new Module(path);

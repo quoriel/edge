@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@eolthar/events": "^1.0.1",
-        "@tryforge/forgescript": "^2.5.0"
+        "@tryforge/forgescript": "^2.6.0",
+        "acorn": "^8.16.0"
     }
 }
