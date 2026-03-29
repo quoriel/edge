@@ -34,7 +34,7 @@ client.login("...");
 module.exports = {
     name: "hello",
     type: "interactionCreate",
-    code: `$ephemeral $call[greet;$username]`
+    code: `$ephemeral $call[greet;$username]!`
 };
 
 function greet(name) {
