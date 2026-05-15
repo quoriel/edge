@@ -4,29 +4,26 @@ const orig = CompiledFunction.prototype["resolveUnhandledArg"];
 CompiledFunction.prototype["resolveUnhandledArg"] = async function(ctx, i, ref = []) {
     const arg = this.fn.data.args?.[i];
     if (!arg?.rest) return orig.call(this, ctx, i, ref);
-    const fields = this.data.fields?.slice(i) ?? [];
+    const all = this.data.fields ?? [];
     const values = [];
-    for (let x = 0; x < fields.length; x++) {
-        const field = fields[x];
+    for (let x = i; x < all.length; x++) {
+        const field = all[x];
         if (field.spread === undefined) {
-            field.spread = field.functions?.length === 1 &&
-                field.functions[0].fn.data.name === "$spread" &&
-                field.value === field.functions[0].data.id;
+            const fns = field.functions?.[0];
+            field.spread = (fns?.fn.data.name === "$spread" && field.value === fns.data.id) ? fns : false;
         }
         if (field.spread) {
-            const spreadArg = field.functions[0].data.fields?.[0];
-            const resolved = await this["resolveCode"](ctx, spreadArg);
-            if (!this["isValidReturnType"](resolved)) return resolved;
-            const parts = resolved.value.split(";");
-            for (const part of parts) {
+            const res = await this["resolveCode"](ctx, field.spread.data.fields[0]);
+            if (!this["isValidReturnType"](res)) return res;
+            for (const part of res.value.split(field.spread.data.fields?.[1]?.value || ";")) {
                 const val = await this["resolveArg"](ctx, arg, { ...field, resolveArg: undefined }, part, ref);
                 if (!this["isValidReturnType"](val)) return val;
                 values.push(val.value);
             }
         } else {
-            const resolved = await this["resolveCode"](ctx, field);
-            if (!this["isValidReturnType"](resolved)) return resolved;
-            const val = await this["resolveArg"](ctx, arg, field, resolved.value, ref);
+            const res = await this["resolveCode"](ctx, field);
+            if (!this["isValidReturnType"](res)) return res;
+            const val = await this["resolveArg"](ctx, arg, field, res.value, ref);
             if (!this["isValidReturnType"](val)) return val;
             values.push(val.value);
         }
@@ -40,13 +37,22 @@ exports.default = new NativeFunction({
     version: "1.0.0",
     brackets: true,
     unwrap: true,
-    args: [{
-        name: "value",
-        description: "Semicolon-delimited string to spread",
-        type: ArgType.String,
-        required: true,
-        rest: false,
-    }],
+    args: [
+        {
+            name: "value",
+            description: "Delimited string to spread",
+            type: ArgType.String,
+            required: true,
+            rest: false
+        },
+        {
+            name: "separator",
+            description: "Separator character",
+            type: ArgType.String,
+            required: false,
+            rest: false
+        }
+    ],
     execute(ctx) {
         return this.success();
     }
