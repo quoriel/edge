@@ -12,7 +12,7 @@ exports.default = new EventHandler({
         for (const command of commands) {
             const allowed = command.data.allowed;
             if (!allowed?.length || capricious(interaction, allowed)) {
-                const id = interaction.customId;
+                const id = interaction.customId || interaction.commandName;
                 const index = id.indexOf(command.separator || "-");
                 if ((index !== -1 ? id.substring(0, index) : id) === command.name) {
                     Interpreter.run({ obj: interaction, client: this, command, data: command.compiled.code, args: [] });
