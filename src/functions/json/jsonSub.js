@@ -1,4 +1,5 @@
 const { NativeFunction, ArgType } = require("@tryforge/forgescript");
+const { jsonMath } = require("../../edge");
 
 exports.default = new NativeFunction({
     name: "$jsonSub",
@@ -17,9 +18,6 @@ exports.default = new NativeFunction({
         }
     ],
     execute(ctx, [keys]) {
-        const val = +keys.pop();
-        const num = ctx.getEnvironmentKey(...keys);
-        const nex = (+num || 0) - val;
-        return this.success(ctx.traverseAddEnvironmentKey(typeof num === "string" ? nex + "" : nex, ...keys));
+        return this.success(jsonMath(ctx, keys, (a, b) => a - b));
     }
 });
