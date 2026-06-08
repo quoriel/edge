@@ -16,6 +16,7 @@ class QuorielEdge extends ForgeExtension {
     }
 
     init(client) {
+        if (this.options?.features?.includes("arrayDirectPass")) require("./patches/arrayDirectPass");
         this.commands = new CommandManager(client);
         this.load(__dirname + "/functions");
         EventManager.load("QuorielEdgeEvents", __dirname + "/events");
