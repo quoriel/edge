@@ -6,7 +6,9 @@ Context.prototype.getEnvironmentKey = function (...args) {
         try {
             const parsed = JSON.parse(args[0]);
             if (Array.isArray(parsed)) return parsed;
-        } catch {}
+        } catch {
+            // it just works ¯\_(ツ)_/¯
+        }
     }
     return original.apply(this, args);
 };
