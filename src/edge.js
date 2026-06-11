@@ -31,16 +31,16 @@ function interactionType(interaction) {
     if (interaction.isUserContextMenuCommand())    return "userContextMenu";
     if (interaction.isMessageContextMenuCommand()) return "messageContextMenu";
     if (interaction.isCommand())                   return "command";
-    if (interaction.isMessageComponent())          return "messageComponent";
-    if (interaction.isRepliable())                 return "repliable";
     if (interaction.isButton())                    return "button";
     if (interaction.isModalSubmit())               return "modal";
-    if (interaction.isAnySelectMenu())             return "selectMenu";
     if (interaction.isStringSelectMenu())          return "stringSelect";
     if (interaction.isUserSelectMenu())            return "userSelect";
     if (interaction.isRoleSelectMenu())            return "roleSelect";
     if (interaction.isMentionableSelectMenu())     return "mentionableSelect";
     if (interaction.isChannelSelectMenu())         return "channelSelect";
+    if (interaction.isAnySelectMenu())             return "selectMenu";
+    if (interaction.isMessageComponent())          return "messageComponent";
+    if (interaction.isRepliable())                 return "repliable";
 }
 
 async function scanRoutes(dir) {
