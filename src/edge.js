@@ -70,10 +70,7 @@ async function loadFiles(files) {
                 for (const name of names) commands.on(name, handler);
             } else if (data.type === "interactionCreate") {
                 const handler = (interaction) => {
-                    if (allowed) {
-                        const type = interactionType(interaction);
-                        if (!type || !allowed.has(type)) return;
-                    }
+                    if (allowed && !allowed.has(interactionType(interaction))) return;
                     Interpreter.run({ obj: interaction, client, data: compiled, command: null, args: [] });
                 };
                 for (const name of names) interactions.on(name, handler);
