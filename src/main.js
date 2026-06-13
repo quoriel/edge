@@ -1,6 +1,6 @@
 const { ForgeExtension } = require("@tryforge/forgescript");
 const { description, version } = require("../package.json");
-const { interactions, commands, init, loadEvents } = require("./edge");
+const { interactions, commands, init, getPrefix, loadEvents } = require("./edge");
 
 class QuorielEdge extends ForgeExtension {
     name = "QuorielEdge";
@@ -21,7 +21,7 @@ class QuorielEdge extends ForgeExtension {
 
         if (this.options?.events) {
             const sep = this.options.separator || "-";
-            init(client);
+            init(client, this.options);
 
             if (this.options.events.includes("interactionCreate")) {
                 client.on("interactionCreate", (interaction) => {
@@ -32,6 +32,17 @@ class QuorielEdge extends ForgeExtension {
                 });
             }
 
+            if (this.options.events.includes("messageCreate")) {
+                client.on("messageCreate", async (message) => {
+                    if (message.author.bot) return;
+                    const prefix = await getPrefix(message);
+                    if (!prefix) return;
+                    const args = message.content.slice(prefix.length).trim().split(/ +/g).filter(Boolean);
+                    const name = args.shift()?.toLowerCase();
+                    if (!name) return;
+                    commands.emit(name, message, args);
+                });
+            }
         }
     }
 }

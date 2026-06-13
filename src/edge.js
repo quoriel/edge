@@ -9,11 +9,58 @@ const commands = new Emitter();
 const cache = new Map();
 const functions = new Map();
 const paths = new Set();
+const prefixes = new Set();
 
 let client = null;
 
-function init(clt) {
-    client = clt;
+const methodMap = {
+    activityCommand: "isPrimaryEntryPointCommand",
+    autocomplete: "isAutocomplete",
+    userContextMenu: "isUserContextMenuCommand",
+    messageContextMenu: "isMessageContextMenuCommand",
+    contextMenu: "isContextMenuCommand",
+    command: "isCommand",
+    button: "isButton",
+    modal: "isModalSubmit",
+    stringSelect: "isStringSelectMenu",
+    userSelect: "isUserSelectMenu",
+    roleSelect: "isRoleSelectMenu",
+    mentionableSelect: "isMentionableSelectMenu",
+    channelSelect: "isChannelSelectMenu",
+    selectMenu: "isAnySelectMenu",
+    messageComponent: "isMessageComponent",
+    repliable: "isRepliable"
+};
+
+function init(climat, options) {
+    client = climat;
+    if (options?.prefix) {
+        const arr = Array.isArray(options.prefix) ? options.prefix : [options.prefix];
+        for (const value of arr) {
+            prefixes.add({
+                compiled: Compiler.compile(value),
+                static: !value.includes("$") ? value : null
+            });
+        }
+    }
+}
+
+async function getPrefix(message) {
+    for (const value of prefixes) {
+        const resolved =
+            value.static ??
+            (await Interpreter.run({
+                client,
+                command: null,
+                data: value.compiled,
+                obj: message,
+                doNotSend: true
+            }));
+        if (message.content.startsWith(resolved)) {
+            return resolved;
+        }
+    }
+    return null;
 }
 
 function jsonMath(ctx, keys, op) {
@@ -21,26 +68,6 @@ function jsonMath(ctx, keys, op) {
     const num = ctx.getEnvironmentKey(...keys);
     const nex = op(+num || 0, val);
     return ctx.traverseAddEnvironmentKey(typeof num === "string" ? nex + "" : nex, ...keys);
-}
-
-function interactionType(interaction) {
-    if (interaction.isChatInputCommand())          return "slashCommand";
-    if (interaction.isPrimaryEntryPointCommand())  return "activityCommand";
-    if (interaction.isAutocomplete())              return "autocomplete";
-    if (interaction.isContextMenuCommand())        return "contextMenu";
-    if (interaction.isUserContextMenuCommand())    return "userContextMenu";
-    if (interaction.isMessageContextMenuCommand()) return "messageContextMenu";
-    if (interaction.isCommand())                   return "command";
-    if (interaction.isButton())                    return "button";
-    if (interaction.isModalSubmit())               return "modal";
-    if (interaction.isStringSelectMenu())          return "stringSelect";
-    if (interaction.isUserSelectMenu())            return "userSelect";
-    if (interaction.isRoleSelectMenu())            return "roleSelect";
-    if (interaction.isMentionableSelectMenu())     return "mentionableSelect";
-    if (interaction.isChannelSelectMenu())         return "channelSelect";
-    if (interaction.isAnySelectMenu())             return "selectMenu";
-    if (interaction.isMessageComponent())          return "messageComponent";
-    if (interaction.isRepliable())                 return "repliable";
 }
 
 async function scanRoutes(dir) {
@@ -54,15 +81,25 @@ async function scanRoutes(dir) {
     return results;
 }
 
-async function loadFiles(files) {
+function compileChecker(allowed) {
+    if (!allowed?.length) return () => true;
+    let body = `i.${methodMap[allowed[0]]}()`;
+    for (let i = 1; i < allowed.length; i++) {
+        body += ` || i.${methodMap[allowed[i]]}()`;
+    }
+    return eval(`(function(i){return ${body};})`);
+}
+
+function loadFiles(files) {
     for (const file of files) {
         const raw = require(file);
-        const entries = Array.isArray(raw) ? raw : [raw];
+        const mod = raw?.default ?? raw;
+        const entries = Array.isArray(mod) ? mod : [mod];
         for (const data of entries) {
             if (!data?.name || !data?.code) continue;
             const compiled = Compiler.compile(data.code);
-            const allowed = data.allowed?.length ? new Set(data.allowed) : null;
             const names = Array.isArray(data.name) ? data.name : [data.name];
+            const checker = compileChecker(data.allowed);
             if (data.type === "messageCreate") {
                 const handler = (message, args) => {
                     Interpreter.run({ obj: message, client, data: compiled, command: null, args, states: { message: { new: message } } });
@@ -70,7 +107,7 @@ async function loadFiles(files) {
                 for (const name of names) commands.on(name, handler);
             } else if (data.type === "interactionCreate") {
                 const handler = (interaction) => {
-                    if (allowed && !allowed.has(interactionType(interaction))) return;
+                    if (!checker(interaction)) return;
                     Interpreter.run({ obj: interaction, client, data: compiled, command: null, args: [] });
                 };
                 for (const name of names) interactions.on(name, handler);
@@ -104,4 +141,4 @@ function clearCache(path) {
     delete require.cache[path];
 }
 
-module.exports = { interactions, commands, cache, functions, init, jsonMath, loadEvents, updateEvents, clearCache };
+module.exports = { interactions, commands, cache, functions, init, getPrefix, jsonMath, loadEvents, updateEvents, clearCache };
