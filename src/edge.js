@@ -37,9 +37,10 @@ function init(climat, options) {
     if (options?.prefix) {
         const arr = Array.isArray(options.prefix) ? options.prefix : [options.prefix];
         for (const value of arr) {
+            const is = value.includes("$");
             prefixes.add({
-                compiled: Compiler.compile(value),
-                static: !value.includes("$") ? value : null
+                compiled: is ? Compiler.compile(value) : null,
+                static: is ? null : value
             });
         }
     }
@@ -98,20 +99,28 @@ function loadFiles(files) {
         for (const data of entries) {
             if (!data?.name || !data?.code) continue;
             const compiled = Compiler.compile(data.code);
-            const names = Array.isArray(data.name) ? data.name : [data.name];
-            const checker = compileChecker(data.allowed);
             if (data.type === "messageCreate") {
                 const handler = (message, args) => {
                     Interpreter.run({ obj: message, client, data: compiled, command: null, args, states: { message: { new: message } } });
                 };
-                for (const name of names) commands.on(name, handler);
+                registerHandler(commands, data, handler);
             } else if (data.type === "interactionCreate") {
+                const checker = compileChecker(data.allowed);
                 const handler = (interaction) => {
                     if (!checker(interaction)) return;
                     Interpreter.run({ obj: interaction, client, data: compiled, command: null, args: [] });
                 };
-                for (const name of names) interactions.on(name, handler);
+                registerHandler(interactions, data, handler);
             }
+        }
+    }
+}
+
+function registerHandler(map, data, handler) {
+    map.on(data.name, handler);
+    if (data.aliases) {
+        for (const alias of data.aliases) {
+            map.on(alias, handler);
         }
     }
 }
