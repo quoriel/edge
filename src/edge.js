@@ -32,11 +32,22 @@ const methodMap = {
     repliable: "isRepliable"
 };
 
+const filterMap = {
+    bots: "m.author.bot",
+    dms: "!m.guild",
+    guilds: "m.guild",
+    threads: "m.channel?.isThread()",
+    nsfw: "m.channel?.nsfw",
+    webhooks: "m.webhookId",
+    system: "m.system",
+    partials: "m.partial",
+    pinned: "m.pinned"
+};
+
 function init(climat, options) {
     client = climat;
-    if (options?.prefix) {
-        const arr = Array.isArray(options.prefix) ? options.prefix : [options.prefix];
-        for (const value of arr) {
+    if (options?.prefixes) {
+        for (const value of options.prefixes) {
             const is = value.includes("$");
             prefixes.add({
                 compiled: is ? Compiler.compile(value) : null,
@@ -46,7 +57,7 @@ function init(climat, options) {
     }
 }
 
-async function getPrefix(message) {
+async function getPrefix(message, raw) {
     for (const value of prefixes) {
         const resolved =
             value.static ??
@@ -57,9 +68,7 @@ async function getPrefix(message) {
                 obj: message,
                 doNotSend: true
             }));
-        if (message.content.startsWith(resolved)) {
-            return resolved;
-        }
+        if (raw.startsWith(resolved)) return resolved;
     }
     return null;
 }
@@ -91,6 +100,21 @@ function compileChecker(allowed) {
     return eval(`(function(i){return ${body};})`);
 }
 
+function compileFilter(allowed) {
+    const is = allowed?.includes("unprefixed") ?? false;
+    let filters;
+    if (allowed) {
+        filters = new Set(allowed.filter((f) => f !== "unprefixed"));
+    } else {
+        filters = new Set(["bots", "dms"]);
+    }
+    let body = is ? "!p" : "p";
+    for (const key in filterMap) {
+        if (filters.has(key)) body += `&&!${filterMap[key]}`;
+    }
+    return eval(`(function(m,p){return ${body};})`);
+}
+
 function loadFiles(files) {
     for (const file of files) {
         const raw = require(file);
@@ -100,7 +124,10 @@ function loadFiles(files) {
             if (!data?.name || !data?.code) continue;
             const compiled = Compiler.compile(data.code);
             if (data.type === "messageCreate") {
-                const handler = (message, args) => {
+                const filter = compileFilter(data.allowed);
+                const handler = (message, rawArgs, hasPrefix) => {
+                    if (!filter(message, hasPrefix)) return;
+                    const args = rawArgs ? rawArgs.trim().split(/ +/g).filter(Boolean) : [];
                     Interpreter.run({ obj: message, client, data: compiled, command: null, args, states: { message: { new: message } } });
                 };
                 registerHandler(commands, data, handler);

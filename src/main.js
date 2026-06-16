@@ -34,13 +34,13 @@ class QuorielEdge extends ForgeExtension {
 
             if (this.options.events.includes("messageCreate")) {
                 client.on("messageCreate", async (message) => {
-                    if (message.author.bot) return;
-                    const prefix = await getPrefix(message);
-                    if (!prefix) return;
-                    const args = message.content.slice(prefix.length).trim().split(/ +/g).filter(Boolean);
-                    const name = args.shift()?.toLowerCase();
-                    if (!name) return;
-                    commands.emit(name, message, args);
+                    const content = message.content.trim();
+                    const sp = content.indexOf(" ");
+                    const raw = (sp !== -1 ? content.substring(0, sp) : content).toLowerCase();
+                    if (!raw) return;
+                    const prefix = await getPrefix(message, raw);
+                    const name = prefix ? raw.substring(prefix.length) : raw;
+                    commands.emit(name, message, sp !== -1 ? content.substring(sp + 1) : "", prefix !== null);
                 });
             }
         }
