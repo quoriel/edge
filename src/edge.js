@@ -33,9 +33,6 @@ const methodMap = {
 };
 
 const filterMap = {
-    bots: "m.author.bot",
-    dms: "!m.guild",
-    guilds: "m.guild",
     threads: "m.channel?.isThread()",
     nsfw: "m.channel?.nsfw",
     webhooks: "m.webhookId",
@@ -104,11 +101,19 @@ function compileFilter(allowed) {
     const is = allowed?.includes("unprefixed") ?? false;
     let filters;
     if (allowed) {
-        filters = new Set(allowed.filter((f) => f !== "unprefixed"));
+        filters = new Set(allowed.filter(f => f !== "unprefixed"));
     } else {
-        filters = new Set(["bots", "dms"]);
+        filters = new Set(["users", "guilds"]);
     }
     let body = is ? "!p" : "p";
+    const hasBots = filters.has("bots");
+    const hasUsers = filters.has("users");
+    if (hasBots && !hasUsers) body += `&&m.author.bot`;
+    else if (hasUsers && !hasBots) body += `&&!m.author.bot`;
+    const hasGuilds = filters.has("guilds");
+    const hasDms = filters.has("dms");
+    if (hasGuilds && !hasDms) body += `&&m.guild`;
+    else if (hasDms && !hasGuilds) body += `&&!m.guild`;
     for (const key in filterMap) {
         if (filters.has(key)) body += `&&!${filterMap[key]}`;
     }
