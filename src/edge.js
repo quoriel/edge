@@ -12,6 +12,7 @@ const paths = new Set();
 const prefixes = new Set();
 
 let client = null;
+let id = 0;
 
 const methodMap = {
     activityCommand: "isPrimaryEntryPointCommand",
@@ -101,7 +102,7 @@ function compileFilter(allowed) {
     const is = allowed?.includes("unprefixed") ?? false;
     let filters;
     if (allowed) {
-        filters = new Set(allowed.filter(f => f !== "unprefixed"));
+        filters = new Set(allowed.filter((f) => f !== "unprefixed"));
     } else {
         filters = new Set(["users", "guilds"]);
     }
@@ -128,19 +129,23 @@ function loadFiles(files) {
         for (const data of entries) {
             if (!data?.name || !data?.code) continue;
             const compiled = Compiler.compile(data.code);
+            const stub = {
+                id: `edge_${++id}`,
+                data: { ...data, path }
+            };
             if (data.type === "messageCreate") {
                 const filter = compileFilter(data.allowed);
                 const handler = (message, rawArgs, hasPrefix) => {
                     if (!filter(message, hasPrefix)) return;
                     const args = rawArgs ? rawArgs.trim().split(/ +/g).filter(Boolean) : [];
-                    Interpreter.run({ obj: message, client, data: compiled, command: null, args, states: { message: { new: message } } });
+                    Interpreter.run({ obj: message, client, data: compiled, command: stub, args, states: { message: { new: message } } });
                 };
                 registerHandler(commands, data, handler);
             } else if (data.type === "interactionCreate") {
                 const checker = compileChecker(data.allowed);
                 const handler = (interaction) => {
                     if (!checker(interaction)) return;
-                    Interpreter.run({ obj: interaction, client, data: compiled, command: null, args: [] });
+                    Interpreter.run({ obj: interaction, client, data: compiled, command: stub, args: [] });
                 };
                 registerHandler(interactions, data, handler);
             }
@@ -175,10 +180,14 @@ async function updateEvents() {
     return Promise.all(promises);
 }
 
-function clearCache(path) {
+function clearCache(path, visited = new Set()) {
+    if (visited.has(path)) return;
+    visited.add(path);
     const mod = require.cache[path];
     if (!mod) return;
-    for (let i = 0, l = mod.children.length; i < l; i++) clearCache(mod.children[i].id);
+    for (let i = 0, l = mod.children.length; i < l; i++) {
+        clearCache(mod.children[i].id, visited);
+    }
     delete require.cache[path];
 }
 

@@ -55,7 +55,7 @@ exports.default = new NativeFunction({
     name: "$call",
     description: "Calls a local JS function defined in the command file",
     version: "1.0.0",
-    output: ArgType.Unknown,
+    output: ArgType.Json,
     brackets: true,
     unwrap: true,
     args: [
@@ -75,6 +75,6 @@ exports.default = new NativeFunction({
         }
     ],
     async execute(ctx, [name, args]) {
-        return this.success(await extract(ctx.cmd.data.path)[name](...args));
+        return this.successJSON(await extract(ctx.cmd.data.path)[name](...args));
     }
 });
