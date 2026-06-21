@@ -1,5 +1,5 @@
 const { NativeFunction, ArgType } = require("@tryforge/forgescript");
-const { cache } = require("../../edge");
+const { caches } = require("../../edge");
 
 exports.default = new NativeFunction({
     name: "$deleteCache",
@@ -9,6 +9,13 @@ exports.default = new NativeFunction({
     unwrap: true,
     args: [
         {
+            name: "table",
+            description: "The table name",
+            type: ArgType.String,
+            required: true,
+            rest: false
+        },
+        {
             name: "name",
             description: "Variable name",
             type: ArgType.String,
@@ -16,8 +23,8 @@ exports.default = new NativeFunction({
             rest: false
         }
     ],
-    execute(ctx, [name]) {
-        cache.delete(name);
+    execute(ctx, [table, name]) {
+        caches.get(table).delete(name);
         return this.success();
     }
 });

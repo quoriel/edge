@@ -1,5 +1,5 @@
 const { NativeFunction, ArgType } = require("@tryforge/forgescript");
-const { cache } = require("../../edge");
+const { caches } = require("../../edge");
 
 exports.default = new NativeFunction({
     name: "$hasCache",
@@ -10,6 +10,13 @@ exports.default = new NativeFunction({
     unwrap: true,
     args: [
         {
+            name: "table",
+            description: "The table name",
+            type: ArgType.String,
+            required: true,
+            rest: false
+        },
+        {
             name: "name",
             description: "Variable name",
             type: ArgType.String,
@@ -17,7 +24,7 @@ exports.default = new NativeFunction({
             rest: false
         }
     ],
-    execute(ctx, [name]) {
-        return this.success(cache.has(name));
+    execute(ctx, [table, name]) {
+        return this.success(caches.get(table).has(name));
     }
 });

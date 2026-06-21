@@ -1,13 +1,13 @@
 const { Emitter } = require("@eolthar/events");
 const { Compiler, Interpreter } = require("@tryforge/forgescript");
+const { extract } = require("./extract");
 const { readdir } = require("fs/promises");
 const { join } = require("path");
 
 const interactions = new Emitter();
 const commands = new Emitter();
 
-const cache = new Map();
-const functions = new Map();
+const caches = new Map();
 const paths = new Set();
 const prefixes = new Set();
 
@@ -44,6 +44,9 @@ const filterMap = {
 
 function init(climat, options) {
     client = climat;
+    if (options?.caches) {
+        for (const name of options.caches) caches.set(name, new Map());
+    }
     if (options?.prefixes) {
         for (const value of options.prefixes) {
             const is = value.includes("$");
@@ -131,7 +134,7 @@ function loadFiles(files) {
             const compiled = Compiler.compile(data.code);
             const stub = {
                 id: `edge_${++id}`,
-                data: { ...data, path }
+                data: { ...data, path: file, functions: extract(file) }
             };
             if (data.type === "messageCreate") {
                 const filter = compileFilter(data.allowed);
@@ -191,4 +194,4 @@ function clearCache(path, visited = new Set()) {
     delete require.cache[path];
 }
 
-module.exports = { interactions, commands, cache, functions, init, getPrefix, jsonMath, loadEvents, updateEvents, clearCache };
+module.exports = { interactions, commands, caches, init, getPrefix, jsonMath, loadEvents, updateEvents, clearCache };

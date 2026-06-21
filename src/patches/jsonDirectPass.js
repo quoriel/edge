@@ -3,9 +3,11 @@ const original = Context.prototype.getEnvironmentKey;
 
 Context.prototype.getEnvironmentKey = function (...args) {
     const arg = args[0];
-    if (args.length === 1 && (arg.startsWith("[") || arg.startsWith("{"))) {
+    if (arg.startsWith("[") || arg.startsWith("{")) {
         try {
-            return JSON.parse(arg);
+            const parsed = JSON.parse(arg);
+            if (args.length === 1) return parsed;
+            return Context.traverseGetValue(parsed, ...args.slice(1));
         } catch {
             // it just works ¯\_(ツ)_/¯
         }

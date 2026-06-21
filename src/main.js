@@ -17,7 +17,9 @@ class QuorielEdge extends ForgeExtension {
 
     init(client) {
         this.load(__dirname + "/functions");
-        if (this.options?.features?.includes("jsonDirectPass")) require("./patches/jsonDirectPass");
+        if (this.options?.features) {
+            for (const name of this.options.features) require("./patches/" + name);
+        }
 
         if (this.options?.events) {
             const sep = this.options.separator || "-";
