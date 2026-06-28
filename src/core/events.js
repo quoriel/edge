@@ -20,7 +20,6 @@ const methodMap = {
     userContextMenu: "isUserContextMenuCommand",
     messageContextMenu: "isMessageContextMenuCommand",
     contextMenu: "isContextMenuCommand",
-    command: "isCommand",
     button: "isButton",
     modal: "isModalSubmit",
     stringSelect: "isStringSelectMenu",
@@ -33,13 +32,11 @@ const methodMap = {
     repliable: "isRepliable"
 };
 
-const filterMap = {
-    threads: "m.channel?.isThread()",
-    nsfw: "m.channel?.nsfw",
-    webhooks: "m.webhookId",
-    system: "m.system",
-    partials: "m.partial",
-    pinned: "m.pinned"
+const onlyGetters = {
+    users: (m) => m.author.id,
+    channels: (m) => m.channel?.id,
+    guilds: (m) => m.guild?.id,
+    categories: (m) => m.channel?.parent?.id
 };
 
 function initEvents(secret, options) {
@@ -91,17 +88,6 @@ async function getPrefix(message, raw) {
     return null;
 }
 
-async function scanRoutes(dir) {
-    const results = [];
-    const files = await readdir(dir, { withFileTypes: true });
-    for (const file of files) {
-        const full = join(dir, file.name);
-        if (file.isDirectory()) results.push(...(await scanRoutes(full)));
-        else if (file.name.endsWith(".js")) results.push(full);
-    }
-    return results;
-}
-
 function compileChecker(allowed) {
     if (!allowed?.length) return () => true;
     let body = `i.${methodMap[allowed[0]]}()`;
@@ -111,27 +97,75 @@ function compileChecker(allowed) {
     return eval(`(function(i){return ${body};})`);
 }
 
-function compileFilter(allowed) {
-    const is = allowed?.includes("unprefixed") ?? false;
-    let filters;
-    if (allowed) {
-        filters = new Set(allowed.filter((f) => f !== "unprefixed"));
-    } else {
-        filters = new Set(["users", "guilds"]);
+function compileFilter(rules) {
+    const r = rules ?? { prefixed: true, guilds: true, users: true };
+    const parts = [];
+    if ("prefixed" in r) parts.push(r.prefixed ? "p" : "!p");
+    if ("users" in r) parts.push(r.users ? "!m.author.bot" : "m.author.bot");
+    if ("guilds" in r) parts.push(r.guilds ? "m.guild" : "!m.guild");
+    const keys = ["channels", "threads", "nsfw"];
+    let any = false;
+    for (let i = 0; i < keys.length; i++) {
+        if (keys[i] in r) {
+            any = true;
+            break;
+        }
     }
-    let body = is ? "!p" : "p";
-    const hasBots = filters.has("bots");
-    const hasUsers = filters.has("users");
-    if (hasBots && !hasUsers) body += `&&m.author.bot`;
-    else if (hasUsers && !hasBots) body += `&&!m.author.bot`;
-    const hasGuilds = filters.has("guilds");
-    const hasDms = filters.has("dms");
-    if (hasGuilds && !hasDms) body += `&&m.guild`;
-    else if (hasDms && !hasGuilds) body += `&&!m.guild`;
-    for (const key in filterMap) {
-        if (filters.has(key)) body += `&&!${filterMap[key]}`;
+    if (any) {
+        const sub = [];
+        if (r.channels) sub.push("(!m.channel?.isThread()&&!m.channel?.nsfw)");
+        if (r.threads) sub.push("m.channel?.isThread()");
+        if (r.nsfw) sub.push("m.channel?.nsfw");
+        const expr = sub.length ? `(${sub.join("||")})` : "false";
+        parts.push(!("guilds" in r) ? `(!m.guild||${expr})` : expr);
     }
-    return eval(`(function(m,p){return ${body};})`);
+    if (!parts.length) return () => true;
+    return eval(`(function(m,p){return ${parts.join("&&")};})`);
+}
+
+function buildOnly(only) {
+    if (!only) return null;
+    const result = {};
+    for (const type in only) {
+        const ids = only[type];
+        const compiled = new Array(ids.length);
+        for (let i = 0; i < ids.length; i++) {
+            const dynamic = ids[i].includes("$");
+            compiled[i] = {
+                compiled: dynamic ? Compiler.compile(ids[i]) : null,
+                static: dynamic ? null : ids[i]
+            };
+        }
+        result[type] = compiled;
+    }
+    return result;
+}
+
+async function checkOnly(only, message) {
+    if (!only) return true;
+    for (const type in only) {
+        const actual = onlyGetters[type]?.(message);
+        if (!actual) return false;
+        const entries = only[type];
+        let matched = false;
+        for (let i = 0; i < entries.length; i++) {
+            const resolved =
+                entries[i].static ??
+                (await Interpreter.run({
+                    client,
+                    command: null,
+                    data: entries[i].compiled,
+                    obj: message,
+                    doNotSend: true
+                }));
+            if (resolved === actual) {
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) return false;
+    }
+    return true;
 }
 
 function loadFiles(files) {
@@ -147,9 +181,11 @@ function loadFiles(files) {
                 data: { ...data, path: file, functions: extract(file) }
             };
             if (data.type === "messageCreate") {
-                const filter = compileFilter(data.allowed);
-                const handler = (message, rawArgs, hasPrefix) => {
+                const filter = compileFilter(data.rules);
+                const only = buildOnly(data.only);
+                const handler = async (message, rawArgs, hasPrefix) => {
                     if (!filter(message, hasPrefix)) return;
+                    if (!(await checkOnly(only, message))) return;
                     const args = rawArgs ? rawArgs.trim().split(/ +/g).filter(Boolean) : [];
                     Interpreter.run({ obj: message, client, data: compiled, command: stub, args, states: { message: { new: message } } });
                 };
@@ -175,6 +211,17 @@ function registerHandler(map, data, handler) {
     }
 }
 
+async function scanRoutes(dir) {
+    const results = [];
+    const files = await readdir(dir, { withFileTypes: true });
+    for (const file of files) {
+        const full = join(dir, file.name);
+        if (file.isDirectory()) results.push(...(await scanRoutes(full)));
+        else if (file.name.endsWith(".js")) results.push(full);
+    }
+    return results;
+}
+
 async function loadEvents(path) {
     const resolved = join(process.cwd(), path);
     paths.add(resolved);
@@ -182,15 +229,13 @@ async function loadEvents(path) {
 }
 
 async function updateEvents() {
-    const promises = [];
     interactions.clear();
     commands.clear();
-    for (const path of paths) {
-        const files = await scanRoutes(path);
+    for (const dir of paths) {
+        const files = await scanRoutes(dir);
         for (const file of files) clearCache(file);
-        promises.push(loadFiles(files));
+        loadFiles(files);
     }
-    return Promise.all(promises);
 }
 
 module.exports = { initEvents, loadEvents, updateEvents };

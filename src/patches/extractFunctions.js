@@ -1,5 +1,5 @@
 const { BaseCommand } = require("@tryforge/forgescript");
-const { extract } = require("../core/extract")
+const { extract } = require("../core/extract");
 const original = BaseCommand.prototype.setPath;
 
 BaseCommand.prototype.setPath = function (path) {
