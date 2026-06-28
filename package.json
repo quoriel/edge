@@ -6,7 +6,7 @@
     "author": "Mlad (https://github.com/eolthar)",
     "license": "GPL-3.0",
     "scripts": {
-        "docgen": "node src/docgen.js"
+        "docgen": "node src/core/docgen.js"
     },
     "dependencies": {
         "@eolthar/events": "^2.0.0",
