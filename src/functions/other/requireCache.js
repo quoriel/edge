@@ -1,5 +1,6 @@
 const { NativeFunction, ArgType } = require("@tryforge/forgescript");
 const { resolve } = require("path");
+const { clearCache } = require("../../core/utils");
 
 const ActionType = {
     delete: "delete",
@@ -38,7 +39,7 @@ exports.default = new NativeFunction({
     execute(ctx, [path, type, recursive]) {
         const full = resolve(process.cwd(), path);
         if (recursive) {
-            clear(full);
+            clearCache(full);
         } else {
             delete require.cache[full];
         }
@@ -48,12 +49,3 @@ exports.default = new NativeFunction({
         return this.success();
     }
 });
-
-function clear(path) {
-    const mod = require.cache[path];
-    if (!mod) return;
-    for (let i = 0, l = mod.children.length; i < l; i++) {
-        clear(mod.children[i].id);
-    }
-    delete require.cache[path];
-}

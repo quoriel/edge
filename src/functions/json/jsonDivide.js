@@ -1,5 +1,5 @@
 const { NativeFunction, ArgType } = require("@tryforge/forgescript");
-const { jsonMath } = require("../../edge");
+const { jsonMath } = require("../../core/utils");
 
 exports.default = new NativeFunction({
     name: "$jsonDivide",

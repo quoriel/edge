@@ -29,23 +29,7 @@ edge.commands.load("interactions");
 client.login("...");
 ```
 
-## Interaction
-```js
-module.exports = {
-    name: "hello",
-    type: "interactionCreate",
-    code: `$ephemeral $call[greet;$username]!`
-};
-
-function greet(name) {
-    return `Hello, ${name}`;
-}
-```
-
-### Structure
-- **name** - The interaction identifier
-- **separator** - Custom separator for splitting customId (default: `-`) (optional)
-- **allowed** - Array of allowed interaction types (optional)
-
-### Supported allowed
-`button`, `selectMenu`, `modal`, `autocomplete`, `contextMenu`, `activityCommand`
+## Useful
+- Configure the class to use cache functions [View documentation](docs/CACHE.md)
+- Events and commands with advanced routing and filtering [View documentation](docs/EVENTS.md)
+- Optional features that extend ForgeScript behavior [View documentation](docs/PATCHES.md)
