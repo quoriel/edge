@@ -54,7 +54,7 @@ $qev[key;...path]
 
 Returns the value at the given path, merged with the schema if part of the data is missing. `$env` is not affected by this system and always returns raw data without defaults - this is intentional, many native functions (`$arrayPush`, `$jsonHas`, `$arrayPop`, etc.) rely on `$env` returning the real, unmodified state.
 
-```
+```js
 $qev[user] // { memory: "0", snake: "0", cash: "0", color: "#FFFFFF", prefix: "." }
 $qev[user;cash] // "0"
 ```
@@ -67,7 +67,7 @@ If the real data already contains a value for a field, that value is returned as
 // structures/economy.json
 { "inventory": { "capacity": 20, "custom": 0 } }
 ```
-```
+```js
 $jsonSet[economy;inventory;custom;1]
 $qev[economy] // { inventory: { custom: 1, capacity: 20 } }
 ```
@@ -82,7 +82,7 @@ Only fields missing from the real data are merged in (`capacity`) - existing fie
 // structures/economy.json
 { "items": [{ "qty": 1, "rarity": "common" }, { "qty": 99, "rarity": "epic" }] }
 ```
-```
+```js
 $env[economy;items] // [{ "name": "sword", "qty": 5 }, { "name": "shield" }]
 $qev[economy;items]
 // [
@@ -101,7 +101,7 @@ For each key in the path (except the last one):
 
 The last key in the path is always written as-is - its type is never checked against the schema.
 
-```
+```js
 $jsonSet[economy;inventory;items;sword] // "inventory" is created as an object (per the schema), "items" gets the value "sword" directly
 ```
 
