@@ -39,6 +39,9 @@ structures/
 }
 ```
 
+> [!NOTE]
+> Use `$updateStructures` to reload all structure schemas after editing or adding structure files.
+
 > [!IMPORTANT]
 > Real data always takes priority over the schema. The schema only acts as a fallback for values that don't exist yet in the environment - it never overwrites or hides real data.
 

@@ -29,6 +29,9 @@ module.exports = {
 
 Functions are called via `$call[functionName;...args]`.
 
+> [!NOTE]
+> Functions are re-extracted on command reload - compatible with `$updateCommands` and `$updateEvents`.
+
 ## `jsonDirectPass`
 Allows passing JSON arrays and JSON objects directly as an argument to functions that accept an environment variable - it works by looking up the object or array if the environment variable turns out to be one.
 
