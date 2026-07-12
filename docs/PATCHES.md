@@ -3,7 +3,7 @@ Features are optional extensions that add new capabilities to ForgeScript. They 
 
 ```js
 const edge = new QuorielEdge({
-    features: ["extractFunctions", "jsonDirectPass", "restArgSpread"]
+    features: ["extractFunctions", "jsonDirectPass", "restArgSpread", "structureDefaults"]
 });
 ```
 
@@ -67,3 +67,8 @@ $hasPerms[$guildID;$botID;$spread[ViewChannel-AddReactions;-]] // true
 
 > [!NOTE]
 > `$spread` only works inside rest arguments.
+
+## `structureDefaults`
+Adds schema-based default values for environment data - lets `$qev` merge in defaults from JSON schemas and makes `$jsonSet` create intermediate containers by schema shape.
+
+See [DEFAULTS.md](DEFAULTS.md) for the full documentation.

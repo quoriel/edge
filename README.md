@@ -33,3 +33,4 @@ client.login("...");
 - Configure the class to use cache functions [View documentation](docs/CACHE.md)
 - Events and commands with advanced routing and filtering [View documentation](docs/EVENTS.md)
 - Optional features that extend ForgeScript behavior [View documentation](docs/PATCHES.md)
+- Define JSON schemas to auto-fill missing environment data [View documentation](docs/DEFAULTS.md)

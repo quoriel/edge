@@ -1,3 +1,6 @@
+const { readdir } = require("fs/promises");
+const { join } = require("path");
+
 const caches = new Map();
 
 function initUtils(options) {
@@ -13,6 +16,17 @@ function jsonMath(ctx, keys, op) {
     return ctx.traverseAddEnvironmentKey(typeof num === "string" ? nex + "" : nex, ...keys);
 }
 
+async function scanDirectory(path, format) {
+    const results = [];
+    const files = await readdir(path, { withFileTypes: true });
+    for (const file of files) {
+        const full = join(path, file.name);
+        if (file.isDirectory()) results.push(...(await scanDirectory(full, format)));
+        else if (file.name.endsWith(format)) results.push(full);
+    }
+    return results;
+}
+
 function clearCache(path, visited = new Set()) {
     if (visited.has(path)) return;
     visited.add(path);
@@ -24,4 +38,4 @@ function clearCache(path, visited = new Set()) {
     delete require.cache[path];
 }
 
-module.exports = { caches, initUtils, jsonMath, clearCache };
+module.exports = { caches, initUtils, jsonMath, scanDirectory, clearCache };
