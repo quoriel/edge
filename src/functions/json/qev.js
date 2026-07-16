@@ -1,27 +1,5 @@
-const { NativeFunction, ArgType, Context } = require("@tryforge/forgescript");
-const { structures, isPlainObject } = require("../../core/structures");
-
-function mergeWithDefault(value, def) {
-    if (isPlainObject(value) && isPlainObject(def)) {
-        const result = { ...value };
-        for (const key in def) {
-            result[key] = key in value ? mergeWithDefault(value[key], def[key]) : cloneDefault(def[key]);
-        }
-        return result;
-    }
-    if (Array.isArray(value) && Array.isArray(def)) {
-        const result = value.slice();
-        for (let i = 0, len = def.length; i < len; i++) {
-            result[i] = i in value ? mergeWithDefault(value[i], def[i]) : cloneDefault(def[i]);
-        }
-        return result;
-    }
-    return value !== undefined ? value : cloneDefault(def);
-}
-
-function cloneDefault(value) {
-    return value !== null && typeof value === "object" ? structuredClone(value) : value;
-}
+const { NativeFunction, ArgType } = require("@tryforge/forgescript");
+const { resolveDefault } = require("../../core/structures");
 
 exports.default = new NativeFunction({
     name: "$qev",
@@ -40,11 +18,6 @@ exports.default = new NativeFunction({
         }
     ],
     execute(ctx, [args]) {
-        const value = ctx.getEnvironmentKey(...args);
-        if (value !== undefined && !isPlainObject(value) && !Array.isArray(value)) return this.successJSON(value);
-        const def = Context.traverseGetValue(structures.get(args[0]), ...args.slice(1));
-        if (isPlainObject(value) && isPlainObject(def)) return this.successJSON(mergeWithDefault(value, def));
-        if (Array.isArray(value) && Array.isArray(def)) return this.successJSON(mergeWithDefault(value, def));
-        return this.successJSON(value !== undefined ? value : cloneDefault(def));
+        return this.successJSON(resolveDefault(ctx.getEnvironmentKey(...args), args[0], ...args.slice(1)));
     }
 });

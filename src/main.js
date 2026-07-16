@@ -2,7 +2,7 @@ const { ForgeExtension } = require("@tryforge/forgescript");
 const { Command } = require("./structures/command");
 const { description, version } = require("../package.json");
 const { initEvents, loadEvents } = require("./core/events");
-const { loadStructures } = require("./core/structures");
+const { updateStructures, resolveDefault } = require("./core/structures");
 const { initUtils } = require("./core/utils");
 
 class QuorielEdge extends ForgeExtension {
@@ -17,7 +17,7 @@ class QuorielEdge extends ForgeExtension {
             load: (path) => loadEvents(path)
         };
         this.structures = {
-            load: (path) => loadStructures(path)
+            load: (path) => updateStructures(path)
         };
     }
 
@@ -33,4 +33,4 @@ class QuorielEdge extends ForgeExtension {
     }
 }
 
-module.exports = { QuorielEdge, Command };
+module.exports = { QuorielEdge, Command, resolveDefault };

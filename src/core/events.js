@@ -1,6 +1,6 @@
 const { Emitter } = require("@eolthar/events");
 const { Interpreter, Compiler } = require("@tryforge/forgescript");
-const { clearCache, scanDirectory } = require("./utils");
+const { clearCache, scanDirectory } = require("./fs");
 const { extract } = require("./extract");
 const { Command } = require("../structures/command");
 const { compileAllowed, compileRules, compileOnly, matchesOnly } = require("./matchers");
