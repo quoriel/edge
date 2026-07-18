@@ -1,5 +1,5 @@
 const { CompiledFunction } = require("@tryforge/forgescript");
-const original = CompiledFunction.prototype["resolveUnhandledArg"];
+const original = CompiledFunction.prototype.resolveUnhandledArg;
 
 CompiledFunction.prototype.resolveUnhandledArg = async function (ctx, i, ref = []) {
     const arg = this.fn.data.args?.[i];

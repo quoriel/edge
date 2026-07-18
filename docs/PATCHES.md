@@ -3,7 +3,7 @@ Features are optional extensions that add new capabilities to ForgeScript. They 
 
 ```js
 const edge = new QuorielEdge({
-    features: ["extractFunctions", "jsonDirectPass", "restArgSpread"]
+    features: ["extractFunctions", "jsonDirectPass", "restArgSpread", "structureDefaults"]
 });
 ```
 
@@ -28,6 +28,9 @@ module.exports = {
 ```
 
 Functions are called via `$call[functionName;...args]`.
+
+> [!NOTE]
+> Functions are re-extracted on command reload - compatible with `$updateCommands` and `$updateEvents`.
 
 ## `jsonDirectPass`
 Allows passing JSON arrays and JSON objects directly as an argument to functions that accept an environment variable - it works by looking up the object or array if the environment variable turns out to be one.
@@ -67,3 +70,8 @@ $hasPerms[$guildID;$botID;$spread[ViewChannel-AddReactions;-]] // true
 
 > [!NOTE]
 > `$spread` only works inside rest arguments.
+
+## `structureDefaults`
+Adds schema-based default values for environment data - lets `$qev` merge in defaults from JSON schemas and makes `$jsonSet` create intermediate containers by schema shape.
+
+See [DEFAULTS.md](DEFAULTS.md) for the full documentation.

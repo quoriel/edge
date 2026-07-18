@@ -21,7 +21,7 @@ exports.default = new NativeFunction({
         const len = fields.length;
         const promises = new Array(len);
         for (let i = 0; i < len; i++) {
-            promises[i] = this["resolveCode"](ctx, fields[i]);
+            promises[i] = this.resolveCode(ctx, fields[i]);
         }
         const results = await Promise.all(promises);
         const values = new Array(len);
