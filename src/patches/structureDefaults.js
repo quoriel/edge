@@ -1,5 +1,5 @@
 const { Context } = require("@tryforge/forgescript");
-const { structures, isPlainObject } = require("../core/structures");
+const { getStructure, isPlainObject } = require("../core/structures");
 
 const originalGet = Context.prototype.getEnvironmentKey;
 const originalAdd = Context.prototype.traverseAddEnvironmentKey;
@@ -7,7 +7,7 @@ const originalAdd = Context.prototype.traverseAddEnvironmentKey;
 Context.prototype.traverseAddEnvironmentKey = function (value, ...keys) {
     if (keys.length <= 1) return originalAdd.apply(this, [value, ...keys]);
     const root = keys[0];
-    let structure = structures.get(root);
+    let structure = getStructure(root);
     let data = originalGet.call(this, root);
     if (data === null || typeof data !== "object") {
         if (!isPlainObject(structure) && !Array.isArray(structure)) return false;

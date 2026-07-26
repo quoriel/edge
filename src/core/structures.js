@@ -3,6 +3,7 @@ const { join, extname, basename } = require("path");
 const { clearCache, scanDirectory } = require("./fs");
 
 const structures = new Map();
+const wildcards = [];
 let path = null;
 
 function isPlainObject(value) {
@@ -11,6 +12,16 @@ function isPlainObject(value) {
 
 function cloneDefault(value) {
     return value !== null && typeof value === "object" ? structuredClone(value) : value;
+}
+
+function getStructure(root) {
+    const exact = structures.get(root);
+    if (exact !== undefined) return exact;
+    for (let i = 0, len = wildcards.length; i < len; i++) {
+        const item = wildcards[i];
+        if (root.startsWith(item.prefix)) return item.data;
+    }
+    return undefined;
 }
 
 function mergeWithDefault(value, def) {
@@ -33,7 +44,7 @@ function mergeWithDefault(value, def) {
 
 function resolveDefault(value, root, ...path) {
     if (value !== undefined && !isPlainObject(value) && !Array.isArray(value)) return value;
-    const def = Context.traverseGetValue(structures.get(root), ...path);
+    const def = Context.traverseGetValue(getStructure(root), ...path);
     if (isPlainObject(value) && isPlainObject(def)) return mergeWithDefault(value, def);
     if (Array.isArray(value) && Array.isArray(def)) return mergeWithDefault(value, def);
     return value !== undefined ? value : cloneDefault(def);
@@ -46,10 +57,20 @@ async function updateStructures(dir) {
     }
     const paths = await scanDirectory(path, ".json");
     structures.clear();
+    wildcards.length = 0;
     for (const file of paths) {
-        structures.set(basename(file, extname(file)), require(file));
+        const name = basename(file, extname(file));
+        const data = require(file);
         clearCache(file);
+        if (name.endsWith("*")) {
+            const prefix = name.slice(0, -1);
+            wildcards.push({ prefix, data });
+            structures.set(prefix, data);
+        } else {
+            structures.set(name, data);
+        }
     }
+    wildcards.sort((a, b) => b.prefix.length - a.prefix.length);
 }
 
-module.exports = { structures, isPlainObject, resolveDefault, updateStructures };
+module.exports = { structures, isPlainObject, getStructure, resolveDefault, updateStructures };
