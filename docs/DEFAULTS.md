@@ -45,13 +45,32 @@ structures/
 > [!IMPORTANT]
 > Real data always takes priority over the schema. The schema only acts as a fallback for values that don't exist yet in the environment - it never overwrites or hides real data.
 
+## Wildcard schemas
+A single schema file can also apply to an entire family of root keys instead of just one, by ending its file name with `*`. This is useful when root keys are generated dynamically (e.g. one entry per user: `user1`, `user2`, `user8484`...) and writing one schema file per key isn't practical.
+ 
+```
+structures/
+├── user*.json       // applies to "user", "user1", "user8484", "userAlice", ...
+└── economy.json     // applies only to "economy"
+```
+ 
+A root key matches a wildcard schema if it starts with the text before the `*`. The `*` only matters as the last character of the file name - it isn't a general-purpose pattern syntax, just a "starts with" marker.
+ 
+```js
+$qev[user8484;cash] // matches structures/user*.json
+$qev[user;cash]     // also matches - the bare prefix itself counts as a match
+```
+ 
+> [!NOTE]
+> An exact schema file (no `*`) always takes priority over a wildcard schema, regardless of prefix length. `user1.json` (if it existed) would win over `user*.json` for the root key `user1`.
+
 ## Reading - `$qev`
 ```
 $qev[key;...path]
 ```
 
-| Parameter | Type   | Required | Description                        |
-| --------- | ------ | -------- | ------------------------------------ |
+| Parameter | Type   | Required | Description                         |
+| --------- | ------ | -------- | ----------------------------------- |
 | `key`     | String | Yes      | Root environment key                |
 | `path`    | String | No       | Additional path keys (rest)         |
 
