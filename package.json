@@ -3,7 +3,7 @@
     "description": "A set of additional functions for ForgeScript to simplify work with various scripts and tasks",
     "version": "1.0.0",
     "main": "src/main.js",
-    "types": "types.d.ts",
+    "types": "src/types.d.ts",
     "author": "Mlad (https://github.com/eolthar)",
     "license": "GPL-3.0",
     "scripts": {
