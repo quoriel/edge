@@ -4,34 +4,45 @@ const { dirname } = require("path");
 const Module = require("module");
 const acorn = require("acorn");
 
-function structure(pattern) {
-    const names = [];
-    for (const prop of pattern.properties) {
-        if (prop.value.type === "Identifier") {
-            names.push(prop.value.name);
-        } else if (prop.value.type === "ObjectPattern") {
-            names.push(...structure(prop.value));
-        }
+function bindings(node, names) {
+    switch (node.type) {
+        case "Identifier":
+            names.add(node.name);
+            break;
+        case "ObjectPattern":
+            for (const prop of node.properties) {
+                bindings(prop.type === "RestElement" ? prop.argument : prop.value, names);
+            }
+            break;
+        case "ArrayPattern":
+            for (const element of node.elements) {
+                if (element) bindings(element, names);
+            }
+            break;
+        case "RestElement":
+            bindings(node.argument, names);
+            break;
+        case "AssignmentPattern":
+            bindings(node.left, names);
+            break;
     }
-    return names;
 }
 
-function extract(path) {
-    const source = readFileSync(path, "utf8");
-    const ast = acorn.parse(source, { ecmaVersion: 2020, sourceType: "script" });
+function extractFunctions(path) {
+    let source = readFileSync(path, "utf8");
+    if (source.charCodeAt(0) === 35 && source.charCodeAt(1) === 33) {
+        source = "//" + source.slice(2);
+    }
+    const ast = acorn.parse(source, { ecmaVersion: "latest", sourceType: "commonjs" });
     const names = new Set();
     const cuts = [];
     for (const node of ast.body) {
-        if (node.type === "FunctionDeclaration" && node.id?.name) {
+        if ((node.type === "FunctionDeclaration" || node.type === "ClassDeclaration") && node.id?.name) {
             names.add(node.id.name);
         }
         if (node.type === "VariableDeclaration") {
             for (const decl of node.declarations) {
-                if (decl.id.type === "Identifier") {
-                    names.add(decl.id.name);
-                } else if (decl.id.type === "ObjectPattern") {
-                    structure(decl.id).forEach((n) => names.add(n));
-                }
+                bindings(decl.id, names);
             }
         }
         if (
@@ -50,17 +61,15 @@ function extract(path) {
     for (let i = cuts.length - 1; i >= 0; i--) {
         stripped = stripped.slice(0, cuts[i][0]) + stripped.slice(cuts[i][1]);
     }
-    const code = `
-        const __lcf = {};
-        ${stripped}
-        ${[...names].map((n) => `if (typeof ${n} === "function") __lcf["${n}"] = ${n};`).join("\n")}
-        module.exports.functions = __lcf;
-    `;
+    let collect = "";
+    for (const name of names) {
+        collect += `if (typeof ${name} === "function") __lcf["${name}"] = ${name};`;
+    }
     const m = new Module(path);
     m.filename = path;
     m.paths = Module._nodeModulePaths(dirname(path));
-    m._compile(code, path);
+    m._compile(`const __lcf = {};${stripped}\n${collect}module.exports.functions = __lcf;`, path);
     return m.exports.functions;
 }
 
-module.exports = { extract };
+module.exports = { extractFunctions };

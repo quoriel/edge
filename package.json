@@ -3,14 +3,15 @@
     "description": "A set of additional functions for ForgeScript to simplify work with various scripts and tasks",
     "version": "1.0.0",
     "main": "src/main.js",
+    "types": "src/types.d.ts",
     "author": "Mlad (https://github.com/eolthar)",
     "license": "GPL-3.0",
     "scripts": {
         "docgen": "node src/core/docgen.js"
     },
     "dependencies": {
-        "@eolthar/events": "^2.0.0",
-        "@tryforge/forgescript": "^2.6.0",
-        "acorn": "^8.16.0"
+        "@eolthar/events": "^2.1.0",
+        "@tryforge/forgescript": "^2.7.0",
+        "acorn": "^8.18.0"
     }
 }

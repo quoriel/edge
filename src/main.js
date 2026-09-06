@@ -3,7 +3,8 @@ const { Command } = require("./structures/command");
 const { description, version } = require("../package.json");
 const { initEvents, loadEvents } = require("./core/events");
 const { updateStructures, resolveDefault } = require("./core/structures");
-const { initUtils } = require("./core/utils");
+const { features, initUtils } = require("./core/utils");
+const { extractFunctions } = require("./core/extract");
 
 class QuorielEdge extends ForgeExtension {
     name = "QuorielEdge";
@@ -33,4 +34,4 @@ class QuorielEdge extends ForgeExtension {
     }
 }
 
-module.exports = { QuorielEdge, Command, resolveDefault };
+module.exports = { QuorielEdge, Command, resolveDefault, extractFunctions, features };

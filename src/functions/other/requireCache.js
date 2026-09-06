@@ -1,6 +1,6 @@
 const { NativeFunction, ArgType } = require("@tryforge/forgescript");
 const { resolve } = require("path");
-const { clearCache } = require("../../core/utils");
+const { clearCache } = require("../../core/fs");
 
 const ActionType = {
     delete: "delete",

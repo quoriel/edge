@@ -1,10 +1,14 @@
 const { resolveDefault } = require("./structures");
 
 const caches = new Map();
+const features = new Set();
 
 function initUtils(options) {
     if (options?.caches) {
         for (const name of options.caches) caches.set(name, new Map());
+    }
+    if (options?.features) {
+        for (const name of options.features) features.add(name);
     }
 }
 
@@ -15,4 +19,4 @@ function jsonMath(ctx, keys, op) {
     return ctx.traverseAddEnvironmentKey(typeof num === "string" ? nex + "" : nex, ...keys);
 }
 
-module.exports = { caches, initUtils, jsonMath };
+module.exports = { caches, features, initUtils, jsonMath };
